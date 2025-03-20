@@ -150,12 +150,6 @@ class TowerTent(Tower):
                     self.lockedEnemy=enemy
         elif self.lockedEnemy not in enemyLst:
             self.lockedEnemy = None
-    #
-    # def fire(self):
-    #     if self.lockedEnemy != None:
-    #         angle = math.atan(self.lockedEnemy.y/self.lockedEnemy.x)
-    #         newBullet = Bullet(self.cx, self.cy, angle)
-
 
 class TowerCFA(Tower):
     price = 1000
@@ -201,11 +195,6 @@ class TowerGates(Tower):
                     self.lockedEnemy=enemy
         elif self.lockedEnemy not in enemyLst:
             self.lockedEnemy = None
-    # def fire(self):
-    #     if self.lockedEnemy != None:
-    #         angle = math.atan(self.lockedEnemy.y/self.lockedEnemy.x)
-    #         newBullet = BulletGates(self.cx, self.cy, angle)
-
 
 class TowerWean(Tower):
     price = 500
@@ -241,13 +230,6 @@ class Bullet(object):
     def draw(self, window):
         self.moveBullet()
         pygame.draw.rect(window,(0,255,0),(self.x,self.y,self.bulletSize,self.bulletSize))
-
-    # def moveBullet(self):
-    #     gradient=(self.end[1]-self.start[1])/(self.end[0]-self.start[0])
-    #     angle=math.atan(gradient)
-    #     self.x += math.cos(angle)*self.speed
-    #     self.y -= math.sin(angle)*self.speed
-    #     self.hitBox=[self.x,self.y,self.x+self.bulletSize,self.y+self.bulletSize]
         
     def moveBullet(self):
         dx=self.start[0]-self.end[0]
@@ -296,7 +278,6 @@ class Enemy(pygame.sprite.Sprite):
         elif self.y%self.cellSize == 0 and self.y !=0 and drow!=0:
             self.currCell += 1
     
-
     def draw(self,window):
         self.move()
         pygame.draw.rect(window,(255,0,0),(self.x,self.y,self.cellSize,self.cellSize))
@@ -322,31 +303,79 @@ def redrawAll():
     window.fill((255,255,255))
     global GPA
     global dinex
-    font = pygame.font.SysFont("Arial", 20)
-    text1 = font.render("INSTRUCTIONS: ", 1, (0, 0, 0))
-    text1pos = (755, 5)
-    text2 = font.render("Press w,t,c,g for different towers", 1, (0, 0, 0))
-    text2pos = (755, 25)
-    text3 = font.render("Click with mouse to place tower", 1, (0, 0, 0))
-    text3pos = (755, 45)
-    text4 = font.render("w = Wean(500), t = Tent(250)", 1, (0, 0, 0))
-    text4pos = (755, 85)
-    text5 = font.render("c = CFA(1000), g = Gates(150)", 1, (0, 0, 0))
-    text5pos = (755, 105)
-    text6 = font.render("Press Esc to unselect", 1, (0, 0, 0))
-    text6pos = (755, 125)
-    text7 = font.render("GPA: %0.2f "%(GPA), 1, (0, 0, 0))
-    text7pos = (755, 165)
-    text8 = font.render("DineX: %d "%(dinex), 1, (0, 0, 0))
-    text8pos = (755, 185)
-    window.blit(text1, text1pos)
-    window.blit(text2, text2pos)
-    window.blit(text3, text3pos)
-    window.blit(text4, text4pos)
-    window.blit(text5, text5pos)
-    window.blit(text6, text6pos)
-    window.blit(text7, text7pos)
-    window.blit(text8, text8pos)
+    
+    # Define constants for layout - sidebar starts at 750px
+    sidebar_x = 755
+    margin_top = 5
+    line_height = 20
+    sidebar_width = 240  # Available width for text in sidebar
+    
+    # Function to draw text with relative positioning and word wrapping
+    def draw_text(text, line_number, color=(0, 0, 0)):
+        font = pygame.font.SysFont("Arial", 20)
+        
+        # Check if text needs to be wrapped
+        words = text.split(' ')
+        lines = []
+        current_line = []
+        current_width = 0
+        
+        for word in words:
+            word_surface = font.render(word + ' ', True, color)
+            word_width = word_surface.get_width()
+            
+            if current_width + word_width <= sidebar_width:
+                current_line.append(word)
+                current_width += word_width
+            else:
+                lines.append(' '.join(current_line))
+                current_line = [word]
+                current_width = word_width
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        # If no wrapping occurred, render as a single line
+        if not lines:
+            lines = [text]
+        
+        # Render each line
+        for i, line in enumerate(lines):
+            text_surface = font.render(line, True, color)
+            y_position = margin_top + ((line_number + i) * line_height)
+            window.blit(text_surface, (sidebar_x, y_position))
+        
+        # Return the number of lines used for proper spacing
+        return len(lines)
+    
+    # Draw all text using relative positioning with wrapping
+    line_pos = 0
+    
+    draw_text("INSTRUCTIONS: ", line_pos, color=(0, 0, 0))
+    line_pos += 1
+    
+    lines_used = draw_text("Press W,T,C,G for different towers", line_pos)
+    line_pos += lines_used
+    
+    lines_used = draw_text("Click with mouse to place tower", line_pos)
+    line_pos += lines_used + 1  # Extra space
+    
+    lines_used = draw_text("W = Wean(500), T = Tent(250)", line_pos)
+    line_pos += lines_used
+    
+    lines_used = draw_text("C = CFA(1000), G = Gates(150)", line_pos)
+    line_pos += lines_used
+
+    lines_used = draw_text("Press spacebar to summon enemies", line_pos)
+    line_pos += lines_used
+    
+    lines_used = draw_text("Press Esc to unselect", line_pos)
+    line_pos += lines_used + 1  # Extra space
+    
+    lines_used = draw_text(f"GPA: {GPA:.2f}", line_pos)
+    line_pos += lines_used
+    
+    draw_text(f"DineX: {dinex}", line_pos)
     
     board.screen.blit((pygame.transform.scale(board.grass, (750,750))), (0,0)) 
     
@@ -455,8 +484,3 @@ while t:
     redrawAll()
 
 pygame.quit()
-        
-    
-    
-    
-
